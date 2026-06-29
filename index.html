@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Mini Pádel - Versión Adaptación Total</title>
+<title>Mini Pádel - Edición Turbo PC</title>
 <style>
 * {
     box-sizing: border-box;
@@ -12,7 +12,6 @@
 }
 body {
     background: #06060c;
-    /* Fondo con cuadrícula sutil para notar los límites reales de la pantalla */
     background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0);
     background-size: 20px 20px;
     display: flex;
@@ -209,9 +208,9 @@ canvas {
 
     <div id="menu-diff" class="menu-box" style="display:none;">
         <h2>DIFICULTAD CPU</h2>
-        <button class="btn btn-green" onclick="selectDiff(3.0)">🟢 Principiante</button>
-        <button class="btn" onclick="selectDiff(4.5)">🔵 Intermedio</button>
-        <button class="btn btn-orange" onclick="selectDiff(5.8)">🔴 Curtido</button>
+        <button class="btn btn-green" onclick="selectDiff(4.5)">🟢 Principiante (Veloz)</button>
+        <button class="btn" onclick="selectDiff(6.5)">🔵 Intermedio (Rápido)</button>
+        <button class="btn btn-orange" onclick="selectDiff(8.5)">🔴 Curtido (Leyenda)</button>
     </div>
 
     <div id="menu-points" class="menu-box" style="display:none;">
@@ -236,15 +235,10 @@ canvas {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-// NUEVA FUNCIÓN AUTOMÁTICA: Escala el canvas de forma estricta dejando un margen para barras del navegador
 function resizeGame() {
     const targetRatio = 900 / 500;
-    // Usamos el tamaño del contenedor que respeta el alto de la pantalla real del celular
     let windowWidth = window.innerWidth;
-    let windowHeight = window.innerHeight;
-    
-    // Dejamos un pequeño margen de seguridad vertical (5% menos de alto) para asegurar que no se corte abajo
-    windowHeight = windowHeight * 0.92;
+    let windowHeight = window.innerHeight * 0.92;
 
     let newWidth = windowWidth;
     let newHeight = windowWidth / targetRatio;
@@ -268,7 +262,7 @@ let score1 = 0;
 let score2 = 0;
 let ticks = 0;
 
-let cpuSpeedSetting = 4.5; 
+let cpuSpeedSetting = 6.5; 
 let maxScoreTarget = 20;
 
 let currentTheme = "normal";
@@ -281,9 +275,10 @@ for(let i=0; i<40; i++) { stars.push({x: Math.random()*900, y: Math.random()*500
 let touchP1 = { id: null, startX: 0, startY: 0, targetX: 100, targetY: 250 };
 let touchP2 = { id: null, startX: 0, startY: 0, targetX: 800, targetY: 250 };
 
-const player1 = { x: 100, y: 250, r: 18, speed: 6.5, currentVy: 0, isHitting: false, hitKey: " ", nextHitReady: 0 };
-const player2 = { x: 800, y: 250, r: 18, speed: 6.5, currentVy: 0, isHitting: false, hitKey: "enter", nextHitReady: 0 }; 
-const ball = { x: 450, y: 250, vx: -5.5, vy: 2.5, r: 10 }; 
+// SE SUBIÓ LA VELOCIDAD BASE DE LOS JUGADORES A 8.5
+const player1 = { x: 100, y: 250, r: 18, speed: 8.5, currentVy: 0, isHitting: false, hitKey: " ", nextHitReady: 0 };
+const player2 = { x: 800, y: 250, r: 18, speed: 8.5, currentVy: 0, isHitting: false, hitKey: "enter", nextHitReady: 0 }; 
+const ball = { x: 450, y: 250, vx: -7.5, vy: 3.5, r: 10 }; 
 
 let lastHitter = 0;        
 let consecutiveHits = 0;   
@@ -437,7 +432,7 @@ function launchMatch() {
     document.getElementById("btn-back").style.display = "flex"; 
     canvas.style.display = "block";
     
-    resizeGame(); // Forzamos el reajuste al iniciar la partida
+    resizeGame(); 
 
     score1 = 0; score2 = 0;
     document.getElementById("score1").textContent = "0"; document.getElementById("score2").textContent = "0";
@@ -464,14 +459,15 @@ function backToMenu() {
 function resetBallOnly() {
     ball.x = 450; ball.y = 250;
     isServe = true; 
+    // SE SUBIÓ LA VELOCIDAD DE LANZAMIENTO INICIAL A 7.5
     if(Math.random() > 0.5) {
-        ball.vx = 5.5;
+        ball.vx = 7.5;
         lastHitter = 1; 
     } else {
-        ball.vx = -5.5;
+        ball.vx = -7.5;
         lastHitter = 2;
     }
-    ball.vy = (Math.random() * 5) - 2.5;
+    ball.vy = (Math.random() * 6) - 3;
     player1.currentVy = 0; player2.currentVy = 0;
     delayUntil = Date.now() + 1000; 
 }
@@ -591,7 +587,7 @@ function update(){
     
     if((p1Auto ? p1Dist < 52 : keys[player1.hitKey]) && p1Dist < 58 && now >= player1.nextHitReady){
         player1.isHitting = true;
-        player1.nextHitReady = now + 220; 
+        player1.nextHitReady = now + 180; // Delay de golpe más corto para jugadas rápidas
 
         if (isServe && lastHitter === 2) { isServe = false; }
 
@@ -602,7 +598,8 @@ function update(){
         
         let ang = Math.atan2(p1Dy, p1Dx);
         let extraSpeed = Math.max(-1.0, Math.min(1.0, player1.currentVy * 0.08));
-        let finalSpeed = 8.2 + Math.abs(extraSpeed); 
+        // SE SUBIÓ LA VELOCIDAD DE IMPACTO MÁXIMA A 10.5
+        let finalSpeed = 10.5 + Math.abs(extraSpeed); 
         
         ball.vx = Math.cos(ang) * finalSpeed; 
         ball.vy = (Math.sin(ang) * finalSpeed) + (player1.currentVy * 0.25);
@@ -621,7 +618,7 @@ function update(){
 
     if(p2HitTrigger && p2Dist < 58 && now >= player2.nextHitReady){
         player2.isHitting = true;
-        player2.nextHitReady = now + 220; 
+        player2.nextHitReady = now + 180; 
 
         if (isServe && lastHitter === 1) { isServe = false; }
 
@@ -632,7 +629,8 @@ function update(){
         
         let ang = Math.atan2(p2Dy, p2Dx);
         let extraSpeed = Math.max(-1.0, Math.min(1.0, player2.currentVy * 0.08));
-        let finalSpeed = 8.2 + Math.abs(extraSpeed);
+        // SE SUBIÓ LA VELOCIDAD DE IMPACTO MÁXIMA A 10.5
+        let finalSpeed = 10.5 + Math.abs(extraSpeed);
 
         ball.vx = Math.cos(ang) * finalSpeed; 
         ball.vy = (Math.sin(ang) * finalSpeed) + (player2.currentVy * 0.25);
@@ -755,7 +753,6 @@ function loop(){
     }
 }
 
-// Llamamos al reajuste al cargar el script inicial
 resizeGame();
 </script>
 </body>
