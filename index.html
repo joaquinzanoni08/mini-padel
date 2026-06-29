@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Mini Pádel - Versión Definitiva Adaptada</title>
+<title>Mini Pádel - Versión Adaptación Total</title>
 <style>
 * {
     box-sizing: border-box;
@@ -11,7 +11,10 @@
     padding: 0;
 }
 body {
-    background: #0a0a12;
+    background: #06060c;
+    /* Fondo con cuadrícula sutil para notar los límites reales de la pantalla */
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0);
+    background-size: 20px 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -21,25 +24,31 @@ body {
     overflow: hidden;
     touch-action: none;
 }
+#canvas-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
 canvas {
     border: 4px solid #ffffff;
-    box-shadow: 0px 0px 20px rgba(255,255,255,0.1);
+    box-shadow: 0px 0px 30px rgba(0,0,0,0.7);
     display: none; 
-    /* Esta es la clave: ajusta el tamaño manteniendo la proporción sin salirse de la pantalla */
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain;
 }
 #info {
     position: absolute;
-    top: 15px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
     color: #fff;
-    font-size: 16px;
-    background: rgba(0, 0, 0, 0.75);
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.85);
     border: 1px solid #fff;
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 20px;
     pointer-events: none;
     display: none; 
@@ -48,15 +57,15 @@ canvas {
 }
 #btn-back {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 10px;
+    right: 10px;
     background: #ff0055;
     color: white;
     border: 2px solid white;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
     display: none; 
@@ -71,41 +80,41 @@ canvas {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(20, 20, 30, 0.95);
+    background: rgba(15, 15, 25, 0.96);
     border: 3px solid #00ffff;
     border-radius: 15px;
-    padding: 25px;
+    padding: 20px;
     color: white;
     text-align: center;
     z-index: 20;
     box-shadow: 0px 0px 25px rgba(0,255,255,0.3);
     max-width: 90%;
-    max-height: 90%;
+    max-height: 92%;
     overflow-y: auto;
 }
 .menu-box h1, .menu-box h2 {
     margin-top: 0;
     color: #00ffff;
 }
-.menu-box h1 { font-size: 28px; }
+.menu-box h1 { font-size: 26px; margin-bottom: 10px; }
 
 .btn {
     color: white;
     border: none;
-    padding: 10px 20px;
-    margin: 5px 0;
-    font-size: 15px;
+    padding: 8px 16px;
+    margin: 4px 0;
+    font-size: 14px;
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
-    width: 280px;
+    width: 270px;
     max-width: 100%;
     background: #111122;
     border: 2px solid #00ffff;
     transition: all 0.2s;
 }
 .btn:hover { 
-    transform: scale(1.03);
+    transform: scale(1.02);
     background: #00ffff;
     color: #111122;
 }
@@ -120,110 +129,137 @@ canvas {
     background: #111122;
     color: white;
     border: 2px solid #00ffff;
-    padding: 8px;
-    font-size: 14px;
+    padding: 6px;
+    font-size: 13px;
     border-radius: 5px;
     width: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .rules-list {
     text-align: left;
-    max-height: 180px;
+    max-height: 150px;
     overflow-y: auto;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     padding-right: 10px;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.4;
 }
 .rules-list li {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 </style>
 </head>
 <body>
 
-<button id="btn-back" onclick="backToMenu()">↩</button>
+<div id="canvas-container">
+    <button id="btn-back" onclick="backToMenu()">↩</button>
 
-<div id="menu-modes" class="menu-box">
-    <h1>MINI PÁDEL ARCADE</h1>
-    <button class="btn" onclick="selectMode('pc')">💻 Solo: Modo PC</button>
-    <button class="btn btn-orange" onclick="selectMode('touch')">📱 Solo: Modo Teléfono</button>
-    <button class="btn btn-green" onclick="selectMode('multi')">👥 2 Jugadores (PC)</button>
-    <button class="btn btn-purple" onclick="selectMode('touch_multi')">📱👥 2 Jugadores (Touch)</button>
-    <button class="btn" style="border-color:#ffeb3b; color:#ffeb3b;" onclick="openRules()">📋 Ver Reglamento de Jaula</button>
-    <button class="btn" style="border-color:#a0a0a0; color:#a0a0a0;" onclick="openConfig()">⚙️ Configuración Visual</button>
+    <div id="menu-modes" class="menu-box">
+        <h1>MINI PÁDEL ARCADE</h1>
+        <button class="btn" onclick="selectMode('pc')">💻 Solo: Modo PC</button>
+        <button class="btn btn-orange" onclick="selectMode('touch')">📱 Solo: Modo Teléfono</button>
+        <button class="btn btn-green" onclick="selectMode('multi')">👥 2 Jugadores (PC)</button>
+        <button class="btn btn-purple" onclick="selectMode('touch_multi')">📱👥 2 Jugadores (Touch)</button>
+        <button class="btn" style="border-color:#ffeb3b; color:#ffeb3b;" onclick="openRules()">📋 Ver Reglamento de Jaula</button>
+        <button class="btn" style="border-color:#a0a0a0; color:#a0a0a0;" onclick="openConfig()">⚙️ Configuración Visual</button>
+    </div>
+
+    <div id="menu-rules" class="menu-box" style="display:none; width: 320px;">
+        <h2>REGLAS DE LA JAULA</h2>
+        <ul class="rules-list">
+            <li><strong>💥 Paredes Traseras:</strong> Podés golpear la pelota directo tras rebotar en tu pared del fondo, o bien tirarla con fuerza contra tu propio blindex para pasarla al otro lado.</li>
+            <li><strong>🛑 Doble Pared Prohibido:</strong> Si la pelota impacta dos veces seguidas en la misma pared trasera antes de ser salvada, es punto para el rival.</li>
+            <li><strong>🔄 Regla del Auto-Retorno:</strong> Si golpeás la pelota, esta rebota y vuelve a tu propio campo sin que tu rival la haya tocado, ¡ganás el punto vos por lograr traerla de vuelta!</li>
+            <li><strong>👥 Doble Toque:</strong> No podés tocar la pelota dos veces seguidas con tu raqueta en la misma jugada.</li>
+            <li><strong>↕️ Paredes Laterales Libres:</strong> La pelota puede rebotar de manera infinita en las bandas superior e inferior.</li>
+            <li><strong>⏱️ Saque Controlado:</strong> Hay un delay de 1 segundo entre puntos para que puedas acomodar tu posición.</li>
+        </ul>
+        <button class="btn btn-green" onclick="closeRules()">👍 Entendido</button>
+    </div>
+
+    <div id="menu-config" class="menu-box" style="display:none; width: 290px;">
+        <h2>AJUSTES VISUALES</h2>
+        <label style="align-self:flex-start; margin-bottom:4px; font-size:13px;">Tema de Cancha:</label>
+        <select id="select-theme" class="select-style">
+            <option value="normal">Normal (Verde)</option>
+            <option value="oscuro">Modo Oscuro</option>
+            <option value="claro">Modo Claro</option>
+            <option value="neon">Neón Cyberpunk</option>
+            <option value="realista">Realista (Césped)</option>
+            <option value="argentina">Argentina 🇦🇷</option>
+            <option value="gameboy">Retro (Game Boy) 🕹️</option>
+            <option value="volcan">Volcánico 🔥</option>
+            <option value="espacio">Espacial ✨</option>
+        </select>
+
+        <label style="align-self:flex-start; margin-bottom:4px; font-size:13px;">Aspecto de Pelota:</label>
+        <select id="select-ball" class="select-style">
+            <option value="tenis">Pelota de Tenis 🎾</option>
+            <option value="futbol">Pelota de Fútbol ⚽</option>
+            <option value="neon">Pelota Neón 🟢</option>
+            <option value="manzana">Una Manzana 🍎</option>
+            <option value="bomba">Bomba Activa 💣</option>
+            <option value="ojo">Ojo Humano 👁️</option>
+            <option value="moneda">Moneda de Oro 🪙</option>
+            <option value="playa">Pelota de Playa 🏖️</option>
+        </select>
+        <button class="btn btn-green" onclick="closeConfig()">💾 Guardar y Volver</button>
+    </div>
+
+    <div id="menu-diff" class="menu-box" style="display:none;">
+        <h2>DIFICULTAD CPU</h2>
+        <button class="btn btn-green" onclick="selectDiff(3.0)">🟢 Principiante</button>
+        <button class="btn" onclick="selectDiff(4.5)">🔵 Intermedio</button>
+        <button class="btn btn-orange" onclick="selectDiff(5.8)">🔴 Curtido</button>
+    </div>
+
+    <div id="menu-points" class="menu-box" style="display:none;">
+        <h2>¿A CUÁNTOS PUNTOS?</h2>
+        <button class="btn" onclick="selectPoints(20)">🎯 Jugar a 20</button>
+        <button class="btn btn-purple" onclick="selectPoints(40)">🎯 Jugar a 40</button>
+        <button class="btn btn-orange" onclick="selectPoints(60)">🎯 Jugar a 60</button>
+    </div>
+
+    <div id="menu-gameover" class="menu-box" style="display:none;">
+        <h2 id="winner-title">¡PARTIDA TERMINADA!</h2>
+        <p id="final-score" style="font-size: 16px; color: #fff; margin-bottom: 15px;">Score</p>
+        <button class="btn btn-green" onclick="rematch()">🔄 Revancha</button>
+        <button class="btn btn-orange" onclick="backToMenu()">🏠 Menú Principal</button>
+    </div>
+
+    <div id="info"><span id="mode-text">Modo</span> | J1: <span id="score1">0</span> | J2/CPU: <span id="score2">0</span></div>
+    <canvas id="game" width="900" height="500"></canvas>
 </div>
-
-<div id="menu-rules" class="menu-box" style="display:none; width: 320px;">
-    <h2>REGLAS DE LA JAULA</h2>
-    <ul class="rules-list">
-        <li><strong>💥 Paredes Traseras:</strong> Podés golpear la pelota directo tras rebotar en tu pared del fondo, o bien tirarla con fuerza contra tu propio blindex para pasarla al otro lado.</li>
-        <li><strong>🛑 Doble Pared Prohibido:</strong> Si la pelota impacta dos veces seguidas en la misma pared trasera antes de ser salvada, es punto para el rival.</li>
-        <li><strong>🔄 Regla del Auto-Retorno:</strong> Si golpeás la pelota, esta rebota y vuelve a tu propio campo sin que tu rival la haya tocado, ¡ganás el punto vos por lograr traerla de vuelta!</li>
-        <li><strong>👥 Doble Toque:</strong> No podés tocar la pelota dos veces seguidas con tu raqueta en la misma jugada.</li>
-        <li><strong>↕️ Paredes Laterales Libres:</strong> La pelota puede rebotar de manera infinita en las bandas superior e inferior.</li>
-        <li><strong>⏱️ Saque Controlado:</strong> Hay un delay de 1 segundo entre puntos para que puedas acomodar tu posición.</li>
-    </ul>
-    <button class="btn btn-green" onclick="closeRules()">👍 Entendido</button>
-</div>
-
-<div id="menu-config" class="menu-box" style="display:none; width: 290px;">
-    <h2>AJUSTES VISUALES</h2>
-    <label style="align-self:flex-start; margin-bottom:4px; font-size:14px;">Tema de Cancha:</label>
-    <select id="select-theme" class="select-style">
-        <option value="normal">Normal (Verde)</option>
-        <option value="oscuro">Modo Oscuro</option>
-        <option value="claro">Modo Claro</option>
-        <option value="neon">Neón Cyberpunk</option>
-        <option value="realista">Realista (Césped)</option>
-        <option value="argentina">Argentina 🇦🇷</option>
-        <option value="gameboy">Retro (Game Boy) 🕹️</option>
-        <option value="volcan">Volcánico 🔥</option>
-        <option value="espacio">Espacial ✨</option>
-    </select>
-
-    <label style="align-self:flex-start; margin-bottom:4px; font-size:14px;">Aspecto de Pelota:</label>
-    <select id="select-ball" class="select-style">
-        <option value="tenis">Pelota de Tenis 🎾</option>
-        <option value="futbol">Pelota de Fútbol ⚽</option>
-        <option value="neon">Pelota Neón 🟢</option>
-        <option value="manzana">Una Manzana 🍎</option>
-        <option value="bomba">Bomba Activa 💣</option>
-        <option value="ojo">Ojo Humano 👁️</option>
-        <option value="moneda">Moneda de Oro 🪙</option>
-        <option value="playa">Pelota de Playa 🏖️</option>
-    </select>
-    <button class="btn btn-green" onclick="closeConfig()">💾 Guardar y Volver</button>
-</div>
-
-<div id="menu-diff" class="menu-box" style="display:none;">
-    <h2>DIFICULTAD CPU</h2>
-    <button class="btn btn-green" onclick="selectDiff(3.0)">🟢 Principiante</button>
-    <button class="btn" onclick="selectDiff(4.5)">🔵 Intermedio</button>
-    <button class="btn btn-orange" onclick="selectDiff(5.8)">🔴 Curtido</button>
-</div>
-
-<div id="menu-points" class="menu-box" style="display:none;">
-    <h2>¿A CUÁNTOS PUNTOS?</h2>
-    <button class="btn" onclick="selectPoints(20)">🎯 Jugar a 20</button>
-    <button class="btn btn-purple" onclick="selectPoints(40)">🎯 Jugar a 40</button>
-    <button class="btn btn-orange" onclick="selectPoints(60)">🎯 Jugar a 60</button>
-</div>
-
-<div id="menu-gameover" class="menu-box" style="display:none;">
-    <h2 id="winner-title">¡PARTIDA TERMINADA!</h2>
-    <p id="final-score" style="font-size: 18px; color: #fff; margin-bottom: 20px;">Score</p>
-    <button class="btn btn-green" onclick="rematch()">🔄 Revancha</button>
-    <button class="btn btn-orange" onclick="backToMenu()">🏠 Menú Principal</button>
-</div>
-
-<div id="info"><span id="mode-text">Modo</span> | J1: <span id="score1">0</span> | J2/CPU: <span id="score2">0</span></div>
-<canvas id="game" width="900" height="500"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+
+// NUEVA FUNCIÓN AUTOMÁTICA: Escala el canvas de forma estricta dejando un margen para barras del navegador
+function resizeGame() {
+    const targetRatio = 900 / 500;
+    // Usamos el tamaño del contenedor que respeta el alto de la pantalla real del celular
+    let windowWidth = window.innerWidth;
+    let windowHeight = window.innerHeight;
+    
+    // Dejamos un pequeño margen de seguridad vertical (5% menos de alto) para asegurar que no se corte abajo
+    windowHeight = windowHeight * 0.92;
+
+    let newWidth = windowWidth;
+    let newHeight = windowWidth / targetRatio;
+
+    if (newHeight > windowHeight) {
+        newHeight = windowHeight;
+        newWidth = windowHeight * targetRatio;
+    }
+
+    canvas.style.width = `${newWidth}px`;
+    canvas.style.height = `${newHeight}px`;
+}
+
+window.addEventListener('resize', resizeGame);
+window.addEventListener('orientationchange', () => setTimeout(resizeGame, 200));
 
 let gameMode = ""; 
 let gameRunning = false; 
@@ -400,6 +436,9 @@ function launchMatch() {
     document.getElementById("info").style.display = "block";
     document.getElementById("btn-back").style.display = "flex"; 
     canvas.style.display = "block";
+    
+    resizeGame(); // Forzamos el reajuste al iniciar la partida
+
     score1 = 0; score2 = 0;
     document.getElementById("score1").textContent = "0"; document.getElementById("score2").textContent = "0";
     
@@ -715,6 +754,9 @@ function loop(){
         drawBall(); requestAnimationFrame(loop);
     }
 }
+
+// Llamamos al reajuste al cargar el script inicial
+resizeGame();
 </script>
 </body>
 </html>
