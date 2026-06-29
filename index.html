@@ -2,39 +2,49 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mini Pádel - Corrección de Reglas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Mini Pádel - Versión Definitiva Adaptada</title>
 <style>
-body{
-    margin:0;
-    background:#0a0a12;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    font-family:Arial, sans-serif;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: #0a0a12;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    font-family: Arial, sans-serif;
     overflow: hidden;
     touch-action: none;
 }
-canvas{
-    border:4px solid #ffffff;
-    max-width: 100vw;
-    max-height: 100vh;
-    box-sizing: border-box;
+canvas {
+    border: 4px solid #ffffff;
+    box-shadow: 0px 0px 20px rgba(255,255,255,0.1);
     display: none; 
+    /* Esta es la clave: ajusta el tamaño manteniendo la proporción sin salirse de la pantalla */
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
-#info{
-    position:absolute;
-    top:15px;
-    color:#fff;
-    font-size: 18px;
-    background: rgba(0, 0, 0, 0.7);
+#info {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 16px;
+    background: rgba(0, 0, 0, 0.75);
     border: 1px solid #fff;
-    padding: 8px 18px;
+    padding: 6px 16px;
     border-radius: 20px;
     pointer-events: none;
     display: none; 
     z-index: 10;
+    white-space: nowrap;
 }
 #btn-back {
     position: absolute;
@@ -69,12 +79,15 @@ canvas{
     text-align: center;
     z-index: 20;
     box-shadow: 0px 0px 25px rgba(0,255,255,0.3);
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
 }
 .menu-box h1, .menu-box h2 {
     margin-top: 0;
     color: #00ffff;
 }
-.menu-box h1 { font-size: 32px; }
+.menu-box h1 { font-size: 28px; }
 
 .btn {
     color: white;
@@ -86,6 +99,7 @@ canvas{
     border-radius: 8px;
     cursor: pointer;
     width: 280px;
+    max-width: 100%;
     background: #111122;
     border: 2px solid #00ffff;
     transition: all 0.2s;
@@ -115,15 +129,15 @@ canvas{
 
 .rules-list {
     text-align: left;
-    max-height: 250px;
+    max-height: 180px;
     overflow-y: auto;
     margin-bottom: 15px;
     padding-right: 10px;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.5;
 }
 .rules-list li {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 </style>
 </head>
@@ -239,6 +253,7 @@ let lastHitter = 0;
 let consecutiveHits = 0;   
 let leftWallTouches = 0;   
 let rightWallTouches = 0;  
+let isServe = true; 
 
 let audioCtx = null;
 function initAudio() {
@@ -409,7 +424,7 @@ function backToMenu() {
 
 function resetBallOnly() {
     ball.x = 450; ball.y = 250;
-    // Si la pelota sale para la izquierda, saca J2 (lastHitter=2). Si sale para la derecha, saca J1 (lastHitter=1).
+    isServe = true; 
     if(Math.random() > 0.5) {
         ball.vx = 5.5;
         lastHitter = 1; 
@@ -448,7 +463,7 @@ function checkEndGame() {
         document.getElementById("winner-title").textContent = txtWinner;
         document.getElementById("final-score").textContent = `Marcador Final: ${score1} a ${score2}`;
         document.getElementById("menu-gameover").style.display = "flex";
-        playSound(300, "square", 0.1); setTimeout(() => playSound(450, "square", 0.1), 100); setTimeout(() => playSound(600, "square", 0.3), 200);
+        playSound(300, "square", 0.1); setTimeout(() => playSound(550, "square", 0.1), 100); setTimeout(() => playSound(600, "square", 0.3), 200);
         return true;
     }
     return false;
@@ -463,11 +478,9 @@ function update(){
     let p1OldY = player1.y;
     if (gameMode === 'pc' || gameMode === 'multi') {
         if (gameMode === 'multi') {
-            // Controles Multijugador PC: J1 usa WASD
             if(keys["a"]) player1.x -= player1.speed; if(keys["d"]) player1.x += player1.speed;
             if(keys["w"]) player1.y -= player1.speed; if(keys["s"]) player1.y += player1.speed;
         } else { 
-            // Controles Single Player PC: J1 usa Flechas
             if(keys["arrowleft"]) player1.x -= player1.speed; if(keys["arrowright"]) player1.x += player1.speed;
             if(keys["arrowup"]) player1.y -= player1.speed; if(keys["arrowdown"]) player1.y += player1.speed;
         }
@@ -481,7 +494,6 @@ function update(){
     // --- MOVIMIENTO J2 / CPU ---
     let p2OldY = player2.y;
     if (gameMode === 'multi') {
-        // Controles Multijugador PC: J2 usa Flechas
         if(keys["arrowleft"]) player2.x -= player2.speed; if(keys["arrowright"]) player2.x += player2.speed;
         if(keys["arrowup"]) player2.y -= player2.speed; if(keys["arrowdown"]) player2.y += player2.speed;
     } else if (gameMode === 'touch_multi') {
@@ -520,14 +532,14 @@ function update(){
         if(rightWallTouches >= 2) { givePointTo(1); return; } 
     }
 
-    // --- REGLA DEL AUTO-RETORNO / FIN DE PUNTO CUANDO CRUZA SOLA ---
-    // Si la pelota cruza de derecha a izquierda (vuelve al campo de J1) y el último toque fue de J1, ¡es punto para J1!
-    if (oldX > 450 && ball.x <= 450 && lastHitter === 1) {
-        givePointTo(1); return;
-    }
-    // Si la pelota cruza de izquierda a derecha (vuelve al campo de J2) y el último toque fue de J2, ¡es punto para J2!
-    if (oldX < 450 && ball.x >= 450 && lastHitter === 2) {
-        givePointTo(2); return;
+    // --- REGLA DEL AUTO-RETORNO ---
+    if (!isServe) {
+        if (oldX > 450 && ball.x <= 450 && lastHitter === 1) {
+            givePointTo(1); return;
+        }
+        if (oldX < 450 && ball.x >= 450 && lastHitter === 2) {
+            givePointTo(2); return;
+        }
     }
 
     if((oldX <= 450 && ball.x > 450) || (oldX >= 450 && ball.x < 450)) {
@@ -542,7 +554,9 @@ function update(){
         player1.isHitting = true;
         player1.nextHitReady = now + 220; 
 
-        if(lastHitter === 1 && ticks > 5) {
+        if (isServe && lastHitter === 2) { isServe = false; }
+
+        if(lastHitter === 1 && !isServe) {
             consecutiveHits++;
             if(consecutiveHits >= 2) { givePointTo(2); return; } 
         } else { lastHitter = 1; consecutiveHits = 1; }
@@ -561,17 +575,18 @@ function update(){
     let p2Dx = ball.x - player2.x; let p2Dy = ball.y - player2.y; let p2Dist = Math.sqrt(p2Dx*p2Dx + p2Dy*p2Dy);
     let p2Auto = (gameMode === 'pc' || gameMode === 'touch');
     
-    // Mapeo dinámico de teclas en base al modo seleccionado
     let p2HitTrigger = false;
     if (gameMode === 'touch_multi') p2HitTrigger = (p2Dist < 52);
     else if (p2Auto) p2HitTrigger = (p2Dist < 52);
-    else if (gameMode === 'multi') p2HitTrigger = keys[player2.hitKey]; // "enter" en multi
+    else if (gameMode === 'multi') p2HitTrigger = keys[player2.hitKey]; 
 
     if(p2HitTrigger && p2Dist < 58 && now >= player2.nextHitReady){
         player2.isHitting = true;
         player2.nextHitReady = now + 220; 
 
-        if(lastHitter === 2 && ticks > 5) {
+        if (isServe && lastHitter === 1) { isServe = false; }
+
+        if(lastHitter === 2 && !isServe) {
             consecutiveHits++;
             if(consecutiveHits >= 2) { givePointTo(1); return; } 
         } else { lastHitter = 2; consecutiveHits = 1; }
