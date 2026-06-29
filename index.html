@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mini Pádel - Corrección de Reglas</title>
+<style>
+body{
+    margin:0;
+    background:#0a0a12;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+}
+canvas{
+    border:4px solid #ffffff;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-sizing: border-box;
+    display: none; 
+}
+#info{
+    position:absolute;
+    top:15px;
+    color:#fff;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #fff;
+    padding: 8px 18px;
+    border-radius: 20px;
+    pointer-events: none;
+    display: none; 
+    z-index: 10;
+}
+#btn-back {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #ff0055;
+    color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: none; 
+    z-index: 30;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-box {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 20, 30, 0.95);
+    border: 3px solid #00ffff;
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+    text-align: center;
+    z-index: 20;
+    box-shadow: 0px 0px 25px rgba(0,255,255,0.3);
+}
+.menu-box h1, .menu-box h2 {
+    margin-top: 0;
+    color: #00ffff;
+}
+.menu-box h1 { font-size: 32px; }
+
+.btn {
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px 0;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 280px;
+    background: #111122;
+    border: 2px solid #00ffff;
+    transition: all 0.2s;
+}
+.btn:hover { 
+    transform: scale(1.03);
+    background: #00ffff;
+    color: #111122;
+}
+.btn-orange { border-color: #ff0055; }
+.btn-orange:hover { background: #ff0055; color: white; }
+.btn-green { border-color: #39ff14; }
+.btn-green:hover { background: #39ff14; color: #111122; }
+.btn-purple { border-color: #bd00ff; }
+.btn-purple:hover { background: #bd00ff; color: white; }
+
+.select-style {
+    background: #111122;
+    color: white;
+    border: 2px solid #00ffff;
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 5px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.rules-list {
+    text-align: left;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding-right: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.rules-list li {
+    margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<button id="btn-back" onclick="backToMenu()">↩</button>
+
+<div id="menu-modes" class="menu-box">
+    <h1>MINI PÁDEL ARCADE</h1>
+    <button class="btn" onclick="selectMode('pc')">💻 Solo: Modo PC</button>
+    <button class="btn btn-orange" onclick="selectMode('touch')">📱 Solo: Modo Teléfono</button>
+    <button class="btn btn-green" onclick="selectMode('multi')">👥 2 Jugadores (PC)</button>
+    <button class="btn btn-purple" onclick="selectMode('touch_multi')">📱👥 2 Jugadores (Touch)</button>
+    <button class="btn" style="border-color:#ffeb3b; color:#ffeb3b;" onclick="openRules()">📋 Ver Reglamento de Jaula</button>
+    <button class="btn" style="border-color:#a0a0a0; color:#a0a0a0;" onclick="openConfig()">⚙️ Configuración Visual</button>
+</div>
+
+<div id="menu-rules" class="menu-box" style="display:none; width: 320px;">
+    <h2>REGLAS DE LA JAULA</h2>
+    <ul class="rules-list">
+        <li><strong>💥 Paredes Traseras:</strong> Podés golpear la pelota directo tras rebotar en tu pared del fondo, o bien tirarla con fuerza contra tu propio blindex para pasarla al otro lado.</li>
+        <li><strong>🛑 Doble Pared Prohibido:</strong> Si la pelota impacta dos veces seguidas en la misma pared trasera antes de ser salvada, es punto para el rival.</li>
+        <li><strong>🔄 Regla del Auto-Retorno:</strong> Si golpeás la pelota, esta rebota y vuelve a tu propio campo sin que tu rival la haya tocado, ¡ganás el punto vos por lograr traerla de vuelta!</li>
+        <li><strong>👥 Doble Toque:</strong> No podés tocar la pelota dos veces seguidas con tu raqueta en la misma jugada.</li>
+        <li><strong>↕️ Paredes Laterales Libres:</strong> La pelota puede rebotar de manera infinita en las bandas superior e inferior.</li>
+        <li><strong>⏱️ Saque Controlado:</strong> Hay un delay de 1 segundo entre puntos para que puedas acomodar tu posición.</li>
+    </ul>
+    <button class="btn btn-green" onclick="closeRules()">👍 Entendido</button>
+</div>
+
+<div id="menu-config" class="menu-box" style="display:none; width: 290px;">
+    <h2>AJUSTES VISUALES</h2>
+    <label style="align-self:flex-start; margin-bottom:4px; font-size:14px;">Tema de Cancha:</label>
+    <select id="select-theme" class="select-style">
+        <option value="normal">Normal (Verde)</option>
+        <option value="oscuro">Modo Oscuro</option>
+        <option value="claro">Modo Claro</option>
+        <option value="neon">Neón Cyberpunk</option>
+        <option value="realista">Realista (Césped)</option>
+        <option value="argentina">Argentina 🇦🇷</option>
+        <option value="gameboy">Retro (Game Boy) 🕹️</option>
+        <option value="volcan">Volcánico 🔥</option>
+        <option value="espacio">Espacial ✨</option>
+    </select>
+
+    <label style="align-self:flex-start; margin-bottom:4px; font-size:14px;">Aspecto de Pelota:</label>
+    <select id="select-ball" class="select-style">
+        <option value="tenis">Pelota de Tenis 🎾</option>
+        <option value="futbol">Pelota de Fútbol ⚽</option>
+        <option value="neon">Pelota Neón 🟢</option>
+        <option value="manzana">Una Manzana 🍎</option>
+        <option value="bomba">Bomba Activa 💣</option>
+        <option value="ojo">Ojo Humano 👁️</option>
+        <option value="moneda">Moneda de Oro 🪙</option>
+        <option value="playa">Pelota de Playa 🏖️</option>
+    </select>
+    <button class="btn btn-green" onclick="closeConfig()">💾 Guardar y Volver</button>
+</div>
+
+<div id="menu-diff" class="menu-box" style="display:none;">
+    <h2>DIFICULTAD CPU</h2>
+    <button class="btn btn-green" onclick="selectDiff(3.0)">🟢 Principiante</button>
+    <button class="btn" onclick="selectDiff(4.5)">🔵 Intermedio</button>
+    <button class="btn btn-orange" onclick="selectDiff(5.8)">🔴 Curtido</button>
+</div>
+
+<div id="menu-points" class="menu-box" style="display:none;">
+    <h2>¿A CUÁNTOS PUNTOS?</h2>
+    <button class="btn" onclick="selectPoints(20)">🎯 Jugar a 20</button>
+    <button class="btn btn-purple" onclick="selectPoints(40)">🎯 Jugar a 40</button>
+    <button class="btn btn-orange" onclick="selectPoints(60)">🎯 Jugar a 60</button>
+</div>
+
+<div id="menu-gameover" class="menu-box" style="display:none;">
+    <h2 id="winner-title">¡PARTIDA TERMINADA!</h2>
+    <p id="final-score" style="font-size: 18px; color: #fff; margin-bottom: 20px;">Score</p>
+    <button class="btn btn-green" onclick="rematch()">🔄 Revancha</button>
+    <button class="btn btn-orange" onclick="backToMenu()">🏠 Menú Principal</button>
+</div>
+
+<div id="info"><span id="mode-text">Modo</span> | J1: <span id="score1">0</span> | J2/CPU: <span id="score2">0</span></div>
+<canvas id="game" width="900" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let gameMode = ""; 
+let gameRunning = false; 
+let keys = {};
+let score1 = 0;
+let score2 = 0;
+let ticks = 0;
+
+let cpuSpeedSetting = 4.5; 
+let maxScoreTarget = 20;
+
+let currentTheme = "normal";
+let currentBallLook = "tenis";
+let delayUntil = 0; 
+
+let stars = [];
+for(let i=0; i<40; i++) { stars.push({x: Math.random()*900, y: Math.random()*500, r: Math.random()*2}); }
+
+let touchP1 = { id: null, startX: 0, startY: 0, targetX: 100, targetY: 250 };
+let touchP2 = { id: null, startX: 0, startY: 0, targetX: 800, targetY: 250 };
+
+const player1 = { x: 100, y: 250, r: 18, speed: 6.5, currentVy: 0, isHitting: false, hitKey: " ", nextHitReady: 0 };
+const player2 = { x: 800, y: 250, r: 18, speed: 6.5, currentVy: 0, isHitting: false, hitKey: "enter", nextHitReady: 0 }; 
+const ball = { x: 450, y: 250, vx: -5.5, vy: 2.5, r: 10 }; 
+
+let lastHitter = 0;        
+let consecutiveHits = 0;   
+let leftWallTouches = 0;   
+let rightWallTouches = 0;  
+
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playSound(freq, type, duration) {
+    if(!audioCtx) return;
+    try {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+}
+
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+function getCanvasCoords(touch) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+        y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+    };
+}
+
+canvas.addEventListener("touchstart", e => {
+    e.preventDefault();
+    if (!gameRunning) return;
+    initAudio();
+
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        let coords = getCanvasCoords(touch);
+
+        if (coords.x < canvas.width / 2 && touchP1.id === null) {
+            touchP1.id = touch.identifier;
+            touchP1.startX = coords.x;
+            touchP1.startY = coords.y;
+            touchP1.targetX = player1.x;
+            touchP1.targetY = player1.y;
+        } 
+        else if (coords.x >= canvas.width / 2 && touchP2.id === null && gameMode === 'touch_multi') {
+            touchP2.id = touch.identifier;
+            touchP2.startX = coords.x;
+            touchP2.startY = coords.y;
+            touchP2.targetX = player2.x;
+            touchP2.targetY = player2.y;
+        }
+    }
+}, {passive: false});
+
+canvas.addEventListener("touchmove", e => {
+    e.preventDefault();
+    if (!gameRunning) return;
+
+    for (let i = 0; i < e.touches.length; i++) {
+        let touch = e.touches[i];
+        let coords = getCanvasCoords(touch);
+
+        if (touch.identifier === touchP1.id) {
+            let dx = coords.x - touchP1.startX;
+            let dy = coords.y - touchP1.startY;
+            touchP1.targetX += dx;
+            touchP1.targetY += dy;
+            touchP1.startX = coords.x;
+            touchP1.startY = coords.y;
+        }
+        else if (touch.identifier === touchP2.id && gameMode === 'touch_multi') {
+            let dx = coords.x - touchP2.startX;
+            let dy = coords.y - touchP2.startY;
+            touchP2.targetX += dx;
+            touchP2.targetY += dy;
+            touchP2.startX = coords.x;
+            touchP2.startY = coords.y;
+        }
+    }
+}, {passive: false});
+
+canvas.addEventListener("touchend", e => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        if (touch.identifier === touchP1.id) touchP1.id = null;
+        if (touch.identifier === touchP2.id) touchP2.id = null;
+    }
+}, {passive: false});
+
+canvas.addEventListener("touchcancel", e => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        if (touch.identifier === touchP1.id) touchP1.id = null;
+        if (touch.identifier === touchP2.id) touchP2.id = null;
+    }
+}, {passive: false});
+
+function openRules() {
+    document.getElementById("menu-modes").style.display = "none";
+    document.getElementById("menu-rules").style.display = "flex";
+}
+function closeRules() {
+    document.getElementById("menu-rules").style.display = "none";
+    document.getElementById("menu-modes").style.display = "flex";
+}
+function openConfig() {
+    document.getElementById("menu-modes").style.display = "none";
+    document.getElementById("menu-config").style.display = "flex";
+}
+function closeConfig() {
+    currentTheme = document.getElementById("select-theme").value;
+    currentBallLook = document.getElementById("select-ball").value;
+    document.getElementById("menu-config").style.display = "none";
+    document.getElementById("menu-modes").style.display = "flex";
+}
+function selectMode(mode) {
+    initAudio();
+    gameMode = mode;
+    document.getElementById("menu-modes").style.display = "none";
+    if(mode === 'pc' || mode === 'touch') document.getElementById("menu-diff").style.display = "flex";
+    else document.getElementById("menu-points").style.display = "flex";
+}
+function selectDiff(speed) {
+    cpuSpeedSetting = speed;
+    document.getElementById("menu-diff").style.display = "none";
+    document.getElementById("menu-points").style.display = "flex";
+}
+function selectPoints(points) {
+    maxScoreTarget = points;
+    document.getElementById("menu-points").style.display = "none";
+    launchMatch();
+}
+function launchMatch() {
+    let borderColors = { normal: "#fff", oscuro: "#444", claro: "#000", neon: "#00ffff", realista: "#fff", argentina: "#fff", gameboy: "#0f380f", volcan: "#ff4500", espacio: "#4444ff" };
+    canvas.style.borderColor = borderColors[currentTheme] || "#fff";
+
+    if(gameMode === 'pc' || gameMode === 'touch') document.getElementById("mode-text").textContent = "VS CPU";
+    else document.getElementById("mode-text").textContent = "J1 VS J2";
+
+    document.getElementById("info").style.display = "block";
+    document.getElementById("btn-back").style.display = "flex"; 
+    canvas.style.display = "block";
+    score1 = 0; score2 = 0;
+    document.getElementById("score1").textContent = "0"; document.getElementById("score2").textContent = "0";
+    
+    player1.x = 100; player1.y = 250; player1.nextHitReady = 0;
+    player2.x = 800; player2.y = 250; player2.nextHitReady = 0;
+    
+    touchP1.targetX = 100; touchP1.targetY = 250; touchP1.id = null;
+    touchP2.targetX = 800; touchP2.targetY = 250; touchP2.id = null;
+
+    gameRunning = true;
+    resetFlags();
+    resetBallOnly();
+    loop();
+}
+function rematch() { document.getElementById("menu-gameover").style.display = "none"; launchMatch(); }
+function backToMenu() {
+    gameRunning = false; keys = {}; touchP1.id = null; touchP2.id = null;
+    document.getElementById("info").style.display = "none"; document.getElementById("btn-back").style.display = "none";
+    canvas.style.display = "none"; document.getElementById("menu-gameover").style.display = "none";
+    document.getElementById("menu-modes").style.display = "flex";
+}
+
+function resetBallOnly() {
+    ball.x = 450; ball.y = 250;
+    // Si la pelota sale para la izquierda, saca J2 (lastHitter=2). Si sale para la derecha, saca J1 (lastHitter=1).
+    if(Math.random() > 0.5) {
+        ball.vx = 5.5;
+        lastHitter = 1; 
+    } else {
+        ball.vx = -5.5;
+        lastHitter = 2;
+    }
+    ball.vy = (Math.random() * 5) - 2.5;
+    player1.currentVy = 0; player2.currentVy = 0;
+    delayUntil = Date.now() + 1000; 
+}
+
+function resetFlags() {
+    consecutiveHits = 0;
+    leftWallTouches = 0;
+    rightWallTouches = 0;
+}
+
+function givePointTo(winner) {
+    if(winner === 1) {
+        score1++; document.getElementById("score1").textContent = score1;
+    } else {
+        score2++; document.getElementById("score2").textContent = score2;
+    }
+    playSound(120, "sawtooth", 0.2);
+    if(!checkEndGame()) {
+        resetFlags();
+        resetBallOnly();
+    }
+}
+
+function checkEndGame() {
+    if(score1 >= maxScoreTarget || score2 >= maxScoreTarget) {
+        gameRunning = false;
+        let txtWinner = score1 >= maxScoreTarget ? "¡JUGADOR 1 GANA! 🏆" : ((gameMode === 'pc' || gameMode === 'touch') ? "¡CPU GANA! 🤖" : "¡JUGADOR 2 GANA! 🏆");
+        document.getElementById("winner-title").textContent = txtWinner;
+        document.getElementById("final-score").textContent = `Marcador Final: ${score1} a ${score2}`;
+        document.getElementById("menu-gameover").style.display = "flex";
+        playSound(300, "square", 0.1); setTimeout(() => playSound(450, "square", 0.1), 100); setTimeout(() => playSound(600, "square", 0.3), 200);
+        return true;
+    }
+    return false;
+}
+
+function update(){
+    if (!gameRunning) return;
+    ticks++;
+    let now = Date.now();
+    
+    // --- MOVIMIENTO J1 ---
+    let p1OldY = player1.y;
+    if (gameMode === 'pc' || gameMode === 'multi') {
+        if (gameMode === 'multi') {
+            // Controles Multijugador PC: J1 usa WASD
+            if(keys["a"]) player1.x -= player1.speed; if(keys["d"]) player1.x += player1.speed;
+            if(keys["w"]) player1.y -= player1.speed; if(keys["s"]) player1.y += player1.speed;
+        } else { 
+            // Controles Single Player PC: J1 usa Flechas
+            if(keys["arrowleft"]) player1.x -= player1.speed; if(keys["arrowright"]) player1.x += player1.speed;
+            if(keys["arrowup"]) player1.y -= player1.speed; if(keys["arrowdown"]) player1.y += player1.speed;
+        }
+    } else {
+        player1.x += (touchP1.targetX - player1.x) * 0.35;
+        player1.y += (touchP1.targetY - player1.y) * 0.35;
+    }
+    player1.x = Math.max(40, Math.min(410, player1.x)); player1.y = Math.max(40, Math.min(canvas.height-40, player1.y));
+    player1.currentVy = player1.y - p1OldY;
+
+    // --- MOVIMIENTO J2 / CPU ---
+    let p2OldY = player2.y;
+    if (gameMode === 'multi') {
+        // Controles Multijugador PC: J2 usa Flechas
+        if(keys["arrowleft"]) player2.x -= player2.speed; if(keys["arrowright"]) player2.x += player2.speed;
+        if(keys["arrowup"]) player2.y -= player2.speed; if(keys["arrowdown"]) player2.y += player2.speed;
+    } else if (gameMode === 'touch_multi') {
+        player2.x += (touchP2.targetX - player2.x) * 0.35;
+        player2.y += (touchP2.targetY - player2.y) * 0.35;
+    } else if (gameMode === 'pc' || gameMode === 'touch') {
+        if(ball.vx > 0) {
+            if(player2.y < ball.y - 10) player2.y += cpuSpeedSetting; else if(player2.y > ball.y + 10) player2.y -= cpuSpeedSetting;
+            let objX = Math.max(550, Math.min(780, ball.x + 50));
+            if(player2.x < objX - 5) player2.x += cpuSpeedSetting; if(player2.x > objX + 5) player2.x -= cpuSpeedSetting;
+        } else {
+            if(player2.y < 245) player2.y += cpuSpeedSetting * 0.5; if(player2.y > 255) player2.y -= cpuSpeedSetting * 0.5;
+            if(player2.x < 745) player2.x += cpuSpeedSetting * 0.5; if(player2.x > 755) player2.x -= cpuSpeedSetting * 0.5;
+        }
+    }
+    player2.x = Math.max(490, Math.min(canvas.width-40, player2.x)); player2.y = Math.max(40, Math.min(canvas.height-40, player2.y));
+    player2.currentVy = player2.y - p2OldY;
+
+    if (Date.now() < delayUntil) return; 
+
+    // --- MOVIMIENTO DE PELOTA ---
+    let oldX = ball.x;
+    ball.x += ball.vx; ball.y += ball.vy;
+
+    if(ball.y < ball.r) { ball.y = ball.r; ball.vy *= -1; playSound(180, "triangle", 0.08); }
+    if(ball.y > canvas.height - ball.r) { ball.y = canvas.height - ball.r; ball.vy *= -1; playSound(180, "triangle", 0.08); }
+
+    if(ball.x < ball.r) { 
+        ball.x = ball.r; ball.vx *= -0.97; ball.vy *= 0.97; playSound(200, "triangle", 0.1);
+        rightWallTouches = 0; leftWallTouches++;
+        if(leftWallTouches >= 2) { givePointTo(2); return; } 
+    }
+    if(ball.x > canvas.width - ball.r) { 
+        ball.x = canvas.width - ball.r; ball.vx *= -0.97; ball.vy *= 0.97; playSound(200, "triangle", 0.1);
+        leftWallTouches = 0; rightWallTouches++;
+        if(rightWallTouches >= 2) { givePointTo(1); return; } 
+    }
+
+    // --- REGLA DEL AUTO-RETORNO / FIN DE PUNTO CUANDO CRUZA SOLA ---
+    // Si la pelota cruza de derecha a izquierda (vuelve al campo de J1) y el último toque fue de J1, ¡es punto para J1!
+    if (oldX > 450 && ball.x <= 450 && lastHitter === 1) {
+        givePointTo(1); return;
+    }
+    // Si la pelota cruza de izquierda a derecha (vuelve al campo de J2) y el último toque fue de J2, ¡es punto para J2!
+    if (oldX < 450 && ball.x >= 450 && lastHitter === 2) {
+        givePointTo(2); return;
+    }
+
+    if((oldX <= 450 && ball.x > 450) || (oldX >= 450 && ball.x < 450)) {
+        leftWallTouches = 0; rightWallTouches = 0;
+    }
+
+    // --- COLISIÓN JUGADOR 1 ---
+    let p1Dx = ball.x - player1.x; let p1Dy = ball.y - player1.y; let p1Dist = Math.sqrt(p1Dx*p1Dx + p1Dy*p1Dy);
+    let p1Auto = (gameMode === 'touch' || gameMode === 'touch_multi');
+    
+    if((p1Auto ? p1Dist < 52 : keys[player1.hitKey]) && p1Dist < 58 && now >= player1.nextHitReady){
+        player1.isHitting = true;
+        player1.nextHitReady = now + 220; 
+
+        if(lastHitter === 1 && ticks > 5) {
+            consecutiveHits++;
+            if(consecutiveHits >= 2) { givePointTo(2); return; } 
+        } else { lastHitter = 1; consecutiveHits = 1; }
+        
+        let ang = Math.atan2(p1Dy, p1Dx);
+        let extraSpeed = Math.max(-1.0, Math.min(1.0, player1.currentVy * 0.08));
+        let finalSpeed = 8.2 + Math.abs(extraSpeed); 
+        
+        ball.vx = Math.cos(ang) * finalSpeed; 
+        ball.vy = (Math.sin(ang) * finalSpeed) + (player1.currentVy * 0.25);
+        ball.x = player1.x + Math.cos(ang) * 60; 
+        playSound(520, "sine", 0.1); 
+    } else { player1.isHitting = false; }
+
+    // --- COLISIÓN JUGADOR 2 / CPU ---
+    let p2Dx = ball.x - player2.x; let p2Dy = ball.y - player2.y; let p2Dist = Math.sqrt(p2Dx*p2Dx + p2Dy*p2Dy);
+    let p2Auto = (gameMode === 'pc' || gameMode === 'touch');
+    
+    // Mapeo dinámico de teclas en base al modo seleccionado
+    let p2HitTrigger = false;
+    if (gameMode === 'touch_multi') p2HitTrigger = (p2Dist < 52);
+    else if (p2Auto) p2HitTrigger = (p2Dist < 52);
+    else if (gameMode === 'multi') p2HitTrigger = keys[player2.hitKey]; // "enter" en multi
+
+    if(p2HitTrigger && p2Dist < 58 && now >= player2.nextHitReady){
+        player2.isHitting = true;
+        player2.nextHitReady = now + 220; 
+
+        if(lastHitter === 2 && ticks > 5) {
+            consecutiveHits++;
+            if(consecutiveHits >= 2) { givePointTo(1); return; } 
+        } else { lastHitter = 2; consecutiveHits = 1; }
+        
+        let ang = Math.atan2(p2Dy, p2Dx);
+        let extraSpeed = Math.max(-1.0, Math.min(1.0, player2.currentVy * 0.08));
+        let finalSpeed = 8.2 + Math.abs(extraSpeed);
+
+        ball.vx = Math.cos(ang) * finalSpeed; 
+        ball.vy = (Math.sin(ang) * finalSpeed) + (player2.currentVy * 0.25);
+        ball.x = player2.x + Math.cos(ang) * 60; 
+        playSound(520, "sine", 0.1);
+    } else { player2.isHitting = false; }
+}
+
+function drawCourt(){
+    ctx.restore(); ctx.save();
+    if(currentTheme === "normal"){
+        ctx.fillStyle="#3BAE55"; ctx.fillRect(0,0,900,500);
+        ctx.strokeStyle="white"; ctx.lineWidth=4; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "oscuro"){
+        ctx.fillStyle="#1e1e1e"; ctx.fillRect(0,0,900,500);
+        ctx.strokeStyle="#444"; ctx.lineWidth=4; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "claro"){
+        ctx.fillStyle="#f5f5f5"; ctx.fillRect(0,0,900,500);
+        ctx.strokeStyle="#222"; ctx.lineWidth=4; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "neon"){
+        ctx.fillStyle="#121224"; ctx.fillRect(0,0,900,500);
+        ctx.strokeStyle="rgba(0, 255, 255, 0.4)"; ctx.lineWidth=4; ctx.strokeRect(20,20,860,460);
+        ctx.strokeStyle="rgba(255, 0, 255, 0.4)"; ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "realista"){
+        ctx.fillStyle="#0f52ba"; ctx.fillRect(0,0,900,500);
+        ctx.fillStyle="rgba(255,255,255,0.04)"; for(let i=0; i<900; i+=15) ctx.fillRect(i,0,2,500);
+        ctx.strokeStyle="#fff"; ctx.lineWidth=5; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "argentina"){
+        ctx.fillStyle="#74ACDF"; ctx.fillRect(0,0,900,165);
+        ctx.fillStyle="#FFF"; ctx.fillRect(0,165,900,170);
+        ctx.fillStyle="#74ACDF"; ctx.fillRect(0,335,900,165);
+        ctx.beginPath(); ctx.fillStyle="#F4B213"; ctx.arc(450,250,25,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="#fff"; ctx.lineWidth=4; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "gameboy"){
+        ctx.fillStyle="#8bac0f"; ctx.fillRect(0,0,900,500);
+        ctx.strokeStyle="#0f380f"; ctx.lineWidth=5; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "volcan"){
+        ctx.fillStyle="#1a0500"; ctx.fillRect(0,0,900,500);
+        ctx.strokeStyle="#ff4500"; ctx.lineWidth=6; ctx.shadowBlur = 15; ctx.shadowColor = "#ff4500"; ctx.strokeRect(20,20,860,460);
+        ctx.strokeStyle="#ffcc00"; ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    } else if(currentTheme === "espacio"){
+        ctx.fillStyle="#020210"; ctx.fillRect(0,0,900,500);
+        ctx.fillStyle="#fff"; stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill(); });
+        ctx.strokeStyle="rgba(100,100,255,0.5)"; ctx.lineWidth=4; ctx.strokeRect(20,20,860,460);
+        ctx.beginPath(); ctx.moveTo(450,20); ctx.lineTo(450,480); ctx.stroke();
+    }
+}
+
+function drawPlayer(p, sideColor, isRightSide){
+    let color = currentTheme === "neon" ? (isRightSide ? "#ff00ff" : "#00ffff") : sideColor;
+    if(currentTheme === "gameboy") color = "#0f380f";
+    if(currentTheme === "volcan") color = isRightSide ? "#ff3300" : "#ffaa00";
+    if(currentTheme === "claro" && sideColor === "#fff") color = "#9e9e9e";
+
+    ctx.save();
+    if(currentTheme === "neon" || currentTheme === "volcan") { ctx.shadowBlur = 15; ctx.shadowColor = color; }
+    ctx.beginPath(); ctx.fillStyle=color; ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    ctx.translate(p.x,p.y); ctx.rotate(isRightSide ? (p.isHitting ? 3.9 : 3.3) : (p.isHitting ? -0.8 : -0.2));
+    ctx.fillStyle=currentTheme === "gameboy" ? "#306230" : "#222"; ctx.fillRect(10,-4,35,8);
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=4; ctx.arc(50,0,16,0,Math.PI*2); ctx.stroke();
+    for(let i=-10;i<=10;i+=5){ ctx.beginPath(); ctx.moveTo(40,i); ctx.lineTo(60,i); ctx.stroke(); }
+    ctx.restore();
+}
+
+function drawBall(){
+    ctx.save();
+    if(currentTheme === "gameboy") {
+        ctx.beginPath(); ctx.fillStyle = "#306230"; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+    } else if(currentBallLook === "tenis"){
+        ctx.beginPath(); ctx.fillStyle="#ccff00"; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="#fff"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(ball.x-5, ball.y, 8, -Math.PI*0.4, Math.PI*0.4); ctx.stroke();
+    } else if(currentBallLook === "futbol"){
+        ctx.beginPath(); ctx.fillStyle="#ffffff"; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.strokeStyle="#000"; ctx.lineWidth=1;
+        ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(ball.x, ball.y, 3, 0, Math.PI*2); ctx.fill();
+        for(let i=0; i<5; i++){ let a = (Math.PI*2/5)*i; ctx.beginPath(); ctx.moveTo(ball.x, ball.y); ctx.lineTo(ball.x + Math.cos(a)*10, ball.y + Math.sin(a)*10); ctx.stroke(); }
+    } else if(currentBallLook === "neon"){
+        ctx.shadowBlur = 20; ctx.shadowColor = "#39ff14";
+        ctx.beginPath(); ctx.fillStyle="#39ff14"; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
+    } else if(currentBallLook === "manzana"){
+        ctx.beginPath(); ctx.fillStyle="#ff1744"; ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.fillStyle="#4caf50"; ctx.ellipse(ball.x+2, ball.y-11, 4, 2, Math.PI/4, 0, Math.PI*2); ctx.fill();
+    } else if(currentBallLook === "bomba"){
+        ctx.beginPath(); ctx.fillStyle="#2d2d2d"; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle="#fff"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ball.x+5, ball.y-5); ctx.lineTo(ball.x+12, ball.y-12); ctx.stroke();
+        ctx.fillStyle = ticks % 6 < 3 ? "#ffcc00" : "#ff3300";
+        ctx.beginPath(); ctx.arc(ball.x+13, ball.y-13, 3, 0, Math.PI*2); ctx.fill();
+    } else if(currentBallLook === "ojo"){
+        ctx.beginPath(); ctx.fillStyle="#ffffff"; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+        let offsetX = ball.vx > 0 ? 3 : -3; let offsetY = ball.vy > 0 ? 1.5 : -1.5;
+        ctx.beginPath(); ctx.fillStyle="#29b6f6"; ctx.arc(ball.x + offsetX, ball.y + offsetY, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.fillStyle="#000000"; ctx.arc(ball.x + offsetX, ball.y + offsetY, 1.8, 0, Math.PI*2); ctx.fill();
+    } else if(currentBallLook === "moneda"){
+        ctx.shadowBlur = 10; ctx.shadowColor = "#ffd700";
+        ctx.beginPath(); ctx.fillStyle="#ffd700"; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle="#b78a00"; ctx.font = "bold 12px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText("$", ball.x, ball.y);
+    } else if(currentBallLook === "playa"){
+        ctx.beginPath(); ctx.fillStyle="#fff"; ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+        let colors = ["#ff1744", "#29b6f6", "#ffca28"];
+        for(let i=0; i<3; i++) {
+            ctx.fillStyle = colors[i]; ctx.beginPath(); ctx.moveTo(ball.x, ball.y);
+            ctx.arc(ball.x, ball.y, ball.r, (Math.PI*2/3)*i, (Math.PI*2/3)*(i+1)); ctx.fill();
+        }
+    }
+    ctx.restore();
+}
+
+function loop(){
+    if(gameRunning) {
+        update(); drawCourt();
+        drawPlayer(player1, "#1565C0", false); drawPlayer(player2, "#E53935", true);  
+        drawBall(); requestAnimationFrame(loop);
+    }
+}
+</script>
+</body>
+</html>
