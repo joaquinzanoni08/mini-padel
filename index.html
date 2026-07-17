@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Mini Pádel Arcade - Edición Balanceada y Corregida</title>
+<title>Mini Pádel Arcade - Edición Balanceada</title>
 <style>
 * {
     box-sizing: border-box;
@@ -169,7 +169,8 @@ canvas {
         <ul class="rules-list">
             <li><strong>💥 Paredes Traseras:</strong> Podés golpear la pelota directo tras rebotar en tu pared del fondo, o bien tirarla con fuerza contra tu propio blindex para pasarla al otro lado.</li>
             <li><strong>🛑 Doble Pared Prohibido:</strong> Si la pelota impacta dos veces seguidas en la misma pared trasera antes de ser salvada, es punto para el rival.</li>
-            <li><strong>🔄 Regla del Auto-Retorno:</strong> Si golpeás la pelota, esta pasa al campo rival y vuelve a tu propio campo sin que tu rival la haya tocado, ¡ganás el punto vos!</li>
+            <li><strong>🔄 Regla del Auto-Retorno:</strong> Si golpeás la pelota, esta rebota en el fondo rival y vuelve a tu propio campo sin que tu rival la haya tocado, ¡ganás el punto vos!</li>
+            <li><strong>🎾 Saque Obligatorio:</strong> En el saque, el rival debe tocar la bola. Si rebota en su fondo y vuelve al tuyo sin tocarlo, es punto de quien sacó.</li>
             <li><strong>👥 Doble Toque:</strong> No podés tocar la pelota dos veces seguidas con tu raqueta en la misma jugada.</li>
             <li><strong>↕️ Paredes Laterales Libres:</strong> La pelota puede rebotar de manera infinita en las bandas superior e inferior.</li>
             <li><strong>⏱️ Saque Controlado:</strong> Hay un delay de 1 segundo entre puntos para que puedas acomodar tu posición.</li>
@@ -280,10 +281,15 @@ const player1 = { x: 100, y: 250, r: 18, speed: 6.0, currentVy: 0, isHitting: fa
 const player2 = { x: 800, y: 250, r: 18, speed: 6.0, currentVy: 0, isHitting: false, hitKey: "enter", nextHitReady: 0 }; 
 const ball = { x: 450, y: 250, vx: -5.5, vy: 3.0, r: 10 }; 
 
-// --- VARIABLES CORREGIDAS PARA EL SISTEMA DE REGLAS DE TURNO ---
-let lastHitter = 0;        // 0 = Nadie, 1 = J1, 2 = J2
-let wallHits = 0;          // Cuenta los impactos en pared del fondo en el turno actual
-let consecutiveHits = 0;   // Evita el doble toque seguido del mismo jugador
+let lastHitter = 0;        
+let consecutiveHits = 0;   
+let leftWallTouches = 0;   
+let rightWallTouches = 0;  
+let isServe = true; 
+
+// Flags de rebote en fondo rival para el auto-retorno preciso
+let j2WallHitByJ1 = false;
+let j1WallHitByJ2 = false;
 
 let audioCtx = null;
 function initAudio() {
@@ -407,6 +413,7 @@ function selectMode(mode) {
     initAudio();
     gameMode = mode;
     
+    // Ajuste fino de velocidad exclusivo para el Modo PC
     if (mode === 'pc' || mode === 'multi') {
         player1.speed = 7.5;
         player2.speed = 7.5;
@@ -466,10 +473,13 @@ function backToMenu() {
 
 function resetBallOnly() {
     ball.x = 450; ball.y = 250;
+    isServe = true; 
     if(Math.random() > 0.5) {
         ball.vx = 5.5;
+        lastHitter = 1; 
     } else {
         ball.vx = -5.5;
+        lastHitter = 2;
     }
     ball.vy = (Math.random() * 4) - 2;
     player1.currentVy = 0; player2.currentVy = 0;
@@ -477,9 +487,11 @@ function resetBallOnly() {
 }
 
 function resetFlags() {
-    lastHitter = 0;
-    wallHits = 0;
     consecutiveHits = 0;
+    leftWallTouches = 0;
+    rightWallTouches = 0;
+    j2WallHitByJ1 = false;
+    j1WallHitByJ2 = false;
 }
 
 function givePointTo(winner) {
@@ -554,29 +566,43 @@ function update(){
     if (Date.now() < delayUntil) return; 
 
     // --- MOVIMIENTO DE PELOTA ---
+    let oldX = ball.x;
     ball.x += ball.vx; ball.y += ball.vy;
 
     if(ball.y < ball.r) { ball.y = ball.r; ball.vy *= -1; playSound(180, "triangle", 0.08); }
     if(ball.y > canvas.height - ball.r) { ball.y = canvas.height - ball.r; ball.vy *= -1; playSound(180, "triangle", 0.08); }
 
-    // --- REBOTES EN PAREDES DE FONDO CORREGIDOS ---
-    if(ball.x < ball.r || ball.x > canvas.width - ball.r) { 
-        ball.x = (ball.x < ball.r) ? ball.r : canvas.width - ball.r;
-        ball.vx *= -0.97; ball.vy *= 0.97; 
-        playSound(200, "triangle", 0.1);
+    // Rebote Fondo Izquierdo (Pared de J1)
+    if(ball.x < ball.r) { 
+        ball.x = ball.r; ball.vx *= -0.97; ball.vy *= 0.97; playSound(200, "triangle", 0.1);
+        rightWallTouches = 0; leftWallTouches++;
+        if(leftWallTouches >= 2) { givePointTo(2); return; }
         
-        wallHits++;
-        if(wallHits > 1) { // Si toca 2 veces seguidas el fondo en el mismo turno antes de ser salvada
-            givePointTo(ball.x < 450 ? 2 : 1);
-            return;
-        }
+        // Si el último en tocarla fue J2, se marca que tocó la pared de J1
+        if(lastHitter === 2) j1WallHitByJ2 = true;
+    }
+    
+    // Rebote Fondo Derecho (Pared de J2)
+    if(ball.x > canvas.width - ball.r) { 
+        ball.x = canvas.width - ball.r; ball.vx *= -0.97; ball.vy *= 0.97; playSound(200, "triangle", 0.1);
+        leftWallTouches = 0; rightWallTouches++;
+        if(rightWallTouches >= 2) { givePointTo(1); return; }
+        
+        // Si el último en tocarla fue J1, se marca que tocó la pared de J2
+        if(lastHitter === 1) j2WallHitByJ1 = true;
     }
 
-    // --- LOGICA DE AUTO-RETORNO FIEL A TU REGLA ---
-    // Si J1 le pegó por última vez pero la pelota volvió a su campo (x < 450) sin que el rival la toque
-    if (lastHitter === 1 && ball.x < 450) { givePointTo(1); return; }
-    // Si J2/CPU le pegó por última vez pero la pelota volvió a su campo (x > 450) sin que J1 la toque
-    if (lastHitter === 2 && ball.x > 450) { givePointTo(2); return; }
+    // --- DETECCIÓN DE AUTO-RETORNO / ERROR DE SAQUE CORREGIDA ---
+    // Si la pelota tocó el fondo de J2 y regresa cruzando la red hacia el lado izquierdo de forma definitiva (ball.vx < 0)
+    if(j2WallHitByJ1 && ball.x < 450 && ball.vx < 0) {
+        givePointTo(1); 
+        return;
+    }
+    // Si la pelota tocó el fondo de J1 y regresa cruzando la red hacia el lado derecho de forma definitiva (ball.vx > 0)
+    if(j1WallHitByJ2 && ball.x > 450 && ball.vx > 0) {
+        givePointTo(2); 
+        return;
+    }
 
     // --- COLISIÓN JUGADOR 1 ---
     let p1Dx = ball.x - player1.x; let p1Dy = ball.y - player1.y; let p1Dist = Math.sqrt(p1Dx*p1Dx + p1Dy*p1Dy);
@@ -586,14 +612,18 @@ function update(){
         player1.isHitting = true;
         player1.nextHitReady = now + 180; 
 
-        // Control de doble toque seguido de J1
-        if(lastHitter === 1) {
+        if (isServe && lastHitter === 2) { isServe = false; }
+
+        // CORRECCIÓN: Si J1 golpea la bola, sus toques en la pared de fondo se limpian y se resetean peligros
+        leftWallTouches = 0;
+        j2WallHitByJ1 = false;
+        j1WallHitByJ2 = false;
+
+        if(lastHitter === 1 && !isServe) {
             consecutiveHits++;
             if(consecutiveHits >= 2) { givePointTo(2); return; } 
         } else { lastHitter = 1; consecutiveHits = 1; }
         
-        wallHits = 0; // Al tocarla el jugador, se resetea la pared para la nueva jugada
-
         let ang = Math.atan2(p1Dy, p1Dx);
         let extraSpeed = Math.max(-1.0, Math.min(1.0, player1.currentVy * 0.08));
         let finalSpeed = 8.2 + Math.abs(extraSpeed); 
@@ -617,14 +647,18 @@ function update(){
         player2.isHitting = true;
         player2.nextHitReady = now + 180; 
 
-        // Control de doble toque seguido de J2
-        if(lastHitter === 2) {
+        if (isServe && lastHitter === 1) { isServe = false; }
+
+        // CORRECCIÓN: Si J2 golpea la bola, sus toques en la pared de fondo se limpian y se resetean peligros
+        rightWallTouches = 0;
+        j2WallHitByJ1 = false;
+        j1WallHitByJ2 = false;
+
+        if(lastHitter === 2 && !isServe) {
             consecutiveHits++;
             if(consecutiveHits >= 2) { givePointTo(1); return; } 
         } else { lastHitter = 2; consecutiveHits = 1; }
         
-        wallHits = 0; // Al tocarla el jugador, se resetea la pared para la nueva jugada
-
         let ang = Math.atan2(p2Dy, p2Dx);
         let extraSpeed = Math.max(-1.0, Math.min(1.0, player2.currentVy * 0.08));
         let finalSpeed = 8.2 + Math.abs(extraSpeed);
