@@ -592,14 +592,14 @@ function update(){
         if(lastHitter === 1) j2WallHitByJ1 = true;
     }
 
-    // --- DETECCIÓN DE AUTO-RETORNO / ERROR DE SAQUE CORREGIDA ---
-    // Si la pelota tocó el fondo de J2 y regresa cruzando la red hacia el lado izquierdo de forma definitiva (ball.vx < 0)
-    if(j2WallHitByJ1 && ball.x < 450 && ball.vx < 0) {
+    // --- DETECCIÓN INFAliBLE DE AUTO-RETORNO / ERROR DE SAQUE ---
+    // Si la pelota tocó el fondo de J2 (por tiro de J1) y cruza la mitad de la cancha volviendo al lado izquierdo...
+    if(j2WallHitByJ1 && ball.x < 450) {
         givePointTo(1); 
         return;
     }
-    // Si la pelota tocó el fondo de J1 y regresa cruzando la red hacia el lado derecho de forma definitiva (ball.vx > 0)
-    if(j1WallHitByJ2 && ball.x > 450 && ball.vx > 0) {
+    // Si la pelota tocó el fondo de J1 (por tiro de J2) y cruza la mitad de la cancha volviendo al lado derecho...
+    if(j1WallHitByJ2 && ball.x > 450) {
         givePointTo(2); 
         return;
     }
@@ -614,8 +614,7 @@ function update(){
 
         if (isServe && lastHitter === 2) { isServe = false; }
 
-        // CORRECCIÓN: Si J1 golpea la bola, sus toques en la pared de fondo se limpian y se resetean peligros
-        leftWallTouches = 0;
+        // Si J1 golpea la bola, se resetean los flags de peligro de las paredes
         j2WallHitByJ1 = false;
         j1WallHitByJ2 = false;
 
@@ -649,8 +648,7 @@ function update(){
 
         if (isServe && lastHitter === 1) { isServe = false; }
 
-        // CORRECCIÓN: Si J2 golpea la bola, sus toques en la pared de fondo se limpian y se resetean peligros
-        rightWallTouches = 0;
+        // Si J2 golpea la bola, se resetean los flags de peligro de las paredes
         j2WallHitByJ1 = false;
         j1WallHitByJ2 = false;
 
