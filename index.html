@@ -571,36 +571,61 @@ function update(){
 
     if(ball.y < ball.r) { ball.y = ball.r; ball.vy *= -1; playSound(180, "triangle", 0.08); }
     if(ball.y > canvas.height - ball.r) { ball.y = canvas.height - ball.r; ball.vy *= -1; playSound(180, "triangle", 0.08); }
+    
+   // --- CONTROL DE CRUCE DE CANCHA Y RESETEO ---
+    // Si la pelota cambia de bando, se limpian los contadores de pared del bando contrario
+    if (oldX >= 450 && ball.x < 450) {
+        rightWallTouches = 0; // Si entra a tu cancha, se limpia el peligro del fondo rival
+    }
+    if (oldX <= 450 && ball.x > 450) {
+        leftWallTouches = 0;  // Si entra a cancha rival, se limpia el peligro de tu fondo
+    }
 
     // Rebote Fondo Izquierdo (Pared de J1)
     if(ball.x < ball.r) { 
         ball.x = ball.r; ball.vx *= -0.97; ball.vy *= 0.97; playSound(200, "triangle", 0.1);
-        rightWallTouches = 0; leftWallTouches++;
-        if(leftWallTouches >= 2) { givePointTo(2); return; }
         
-        // Si el último en tocarla fue J2, se marca que tocó la pared de J1
-        if(lastHitter === 2) j1WallHitByJ2 = true;
+        // Si el último en tocarla fue J2 (CPU) y pega en tu pared, es el primer rebote en tu fondo.
+        // Pero si J1 no la toca y vuelve a la cancha de J2, se cumple el Auto-Retorno a favor de J2.
+        if(lastHitter === 2) {
+            if (j1WallHitByJ2) { // Si ya había pegado antes (Doble Pared del atacante sin tocar)
+                givePointTo(2);
+                return;
+            }
+            j1WallHitByJ2 = true;
+        } else {
+            // Si el último en tocarla fue J1 (vos), estás usando tu pared para defenderte/pasar.
+            leftWallTouches++;
+            if(leftWallTouches >= 2) { givePointTo(2); return; }
+        }
     }
     
     // Rebote Fondo Derecho (Pared de J2)
     if(ball.x > canvas.width - ball.r) { 
         ball.x = canvas.width - ball.r; ball.vx *= -0.97; ball.vy *= 0.97; playSound(200, "triangle", 0.1);
-        leftWallTouches = 0; rightWallTouches++;
-        if(rightWallTouches >= 2) { givePointTo(1); return; }
         
-        // Si el último en tocarla fue J1, se marca que tocó la pared de J2
-        if(lastHitter === 1) j2WallHitByJ1 = true;
+        if(lastHitter === 1) {
+            if (j2WallHitByJ1) {
+                givePointTo(1);
+                return;
+            }
+            j2WallHitByJ1 = true;
+        } else {
+            rightWallTouches++;
+            if(rightWallTouches >= 2) { givePointTo(1); return; }
+        }
     }
 
-    // --- DETECCIÓN INFAliBLE DE AUTO-RETORNO / ERROR DE SAQUE ---
-    // Si la pelota tocó el fondo de J2 (por tiro de J1) y cruza la mitad de la cancha volviendo al lado izquierdo...
-    if(j2WallHitByJ1 && ball.x < 450) {
-        givePointTo(1); 
+    // --- DETECCIÓN DE AUTO-RETORNO TRAS CRUCE Y TOQUE DE PARED ---
+    // Si J1 la tiró al fondo de J2 (j2WallHitByJ1 es true), cruzó al lado de J1, y J1 la deja picar en su propia pared
+    // sin que J2 la haya tocado en el medio, es punto para J1.
+    if(j2WallHitByJ1 && ball.x < ball.r + 2 && lastHitter === 1) {
+        givePointTo(1);
         return;
     }
-    // Si la pelota tocó el fondo de J1 (por tiro de J2) y cruza la mitad de la cancha volviendo al lado derecho...
-    if(j1WallHitByJ2 && ball.x > 450) {
-        givePointTo(2); 
+    // Lo mismo para la CPU/J2
+    if(j1WallHitByJ2 && ball.x > canvas.width - ball.r - 2 && lastHitter === 2) {
+        givePointTo(2);
         return;
     }
 
